@@ -30,7 +30,7 @@ proc index(r: Request) =
         <!DOCTYPE html>
         <html>
         <meta name='viewport' content='width=device-width, height=device-height, initial-scale=1.0'>
-        <body style="background-image:linear-gradient(red, yellow); min-height: 100vh;">
+        <body style="background-image:linear-gradient(yellow, red); min-height: 100vh;">
             <img src='/logo.svg' onerror="this.src='/favicon.ico';" alt='T' style='border: thin solid white; width: 10%; height: 10%;'>
 
             <h3>Host Name: {getHostname()}</h3>
@@ -81,6 +81,15 @@ for kind, key, val in getopt():
         except ValueError:
             quit("Invalid Port")
 
+var server_thrd: Thread[(Router, int, string)]
+server_thrd.createThread(param=(router, port, host), tp=proc(args: (Router, int, string)) {.thread.} =
+    let (router, port, host) = args
+    newServer(router).serve(port.Port, host)
+)
+
+
 # if the serve is listening on localhost, open the host's browser to the page automatically
 if host in [$IPv4_any(), $IPv6_any(), "127.0.0.1"]:
     openDefaultBrowser(&"http://127.0.0.1:{port}")
+
+discard stdin.readLine()
