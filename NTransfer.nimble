@@ -11,7 +11,7 @@ bin           = @["NTransfer"]
 # Dependencies
 
 requires "nim >= 1.9.3"
-requires "mummy"
+requires "mummy#HEAD"
 requires "webby"
 
 # tasks
@@ -19,4 +19,4 @@ requires "webby"
 # set application icon using rcedit on windows
 when defined(windows):
     after build:
-        exec("rcedit NTransfer.exe --set-icon ./src/favicon.ico")
+        exec("rcedit NTransfer.exe --set-icon favicon.ico")
