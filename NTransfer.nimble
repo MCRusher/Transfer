@@ -5,7 +5,7 @@ author        = "MCRusher"
 description   = "A simple and insecure file transfer application"
 license       = "MIT"
 srcDir        = "src"
-bin           = @["NTransfer"]
+bin           = @["Transfer"]
 
 
 # Dependencies
