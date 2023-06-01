@@ -47,7 +47,7 @@ proc index(r: Request) =
     for kind, filename in walkDir(FilesDir, relative=true):
         if kind in {pcFile, pcLinkToFile}:
             content &= &"<td style='display: inline-block'><a href='/serve/{filename}'>{filename}</a></td>"
-    content &= "\n</tr></table>\n</body>\n</html>"
+    content &= """</tr></table><br><hr><br><button onclick="window.location.href='/shutdown'">Shutdown</button></body></html>"""
 
     # respond with html page content
     r.respond(200, @[("Content-Type", "text/html; charset=utf-8")], content)
@@ -70,8 +70,23 @@ proc serveFile(r: Request) =
 router.get("/logo.svg") do(r: Request):
     r.respond(200, @[("Content-Type", "image/svg+xml")], LogoData)
 
+# inline route to shut down the server
+router.get("/shutdown") do(r: Request):
+    logger.info(&"Server shutdown initiated by client \"{r.remoteAddress}\"")
+    r.respond(200, @[("Content-Type", "text/html; charset=utf-8")], """
+    <!DOCTYPE html>
+    <html>
+        <body>
+            <h1>Server is dead.</h1>
+        </body>
+    </html>
+    """.dedent())
+    quit(QuitSuccess)
+    
+
+var openBrowser = true
 # parse commandline arguments to allow overriding host and port values
-for kind, key, val in getopt():
+for kind, key, val in getopt(shortNoVal= {'b'}, longNoVal= @["no-browser"]):
     if kind == cmdLongOption and key == "host" or
        kind == cmdShortOption and key == "h":
         host = val
@@ -81,6 +96,10 @@ for kind, key, val in getopt():
             port = val.parseInt()
         except ValueError:
             quit("Invalid Port")
+    elif kind == cmdLongOption and key == "no-browser" or
+         kind == cmdShortOption and key == "b":
+            openBrowser = false
+
 
 var server_thrd: Thread[(Router, int, string)]
 server_thrd.createThread(param=(router, port, host), tp=proc(args: (Router, int, string)) =
@@ -89,7 +108,8 @@ server_thrd.createThread(param=(router, port, host), tp=proc(args: (Router, int,
 )
 
 # if the server is listening on localhost, open the host's browser to the page automatically
-if host in [$IPv4_any(), $IPv6_any(), "127.0.0.1"]:
+# unless told not to by commandline args
+if openBrowser and host in [$IPv4_any(), $IPv6_any(), "127.0.0.1"]:
     openDefaultBrowser(&"http://127.0.0.1:{port}")
 
-discard stdin.readLine()
+server_thrd.joinThread()
