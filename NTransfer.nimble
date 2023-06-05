@@ -19,4 +19,4 @@ requires "webby"
 # set application icon using rcedit on windows
 when defined(windows):
     after build:
-        exec("rcedit NTransfer.exe --set-icon favicon.ico")
+        exec("rcedit Transfer.exe --set-icon favicon.ico")
